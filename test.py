@@ -15,7 +15,7 @@ data_cat = pd.read_csv(cat_file)
 print(data_cat)
 
 
-row = data_cat.iloc[23]
+row = data_cat.iloc[22]
 relative_seconds = float(row['time_rel(sec)'])
 print(relative_seconds)
 
@@ -170,3 +170,13 @@ axs[3].legend()
 
 fig.tight_layout()
 plt.show()
+
+
+# Specify the file path where you want to save the CSV file
+output_csv_file = 'seismic_results.csv'
+
+# Save the DataFrame to CSV
+results_df.to_csv(output_csv_file, index=False)
+
+# Confirm the file has been saved
+print(f'The results have been saved to {output_csv_file}')
