@@ -15,7 +15,7 @@ data_cat = pd.read_csv(cat_file)
 print(data_cat)
 
 
-row = data_cat.iloc[8]
+row = data_cat.iloc[23]
 relative_seconds = float(row['time_rel(sec)'])
 print(relative_seconds)
 
@@ -99,6 +99,39 @@ for i in range(sxx.shape[1]):
     else:
         dominant_freq[i] = 0  # Set to zero if no spike
 
+
+
+# Lengths of the different components
+print(f'Length of Relative Time (t): {len(t)}')
+print(f'Length of Velocity (tr_data_filt): {len(tr_data_filt)}')
+print(f'Length of Average Power (avg_power): {len(avg_power)}')
+print(f'Length of Weighted Frequency (weighted_freq): {len(weighted_freq)}')
+print(f'Length of Dominant Frequency (dominant_freq): {len(dominant_freq)}')
+
+n = len(tr_data_filt) // len(t)
+velocities_for_avg_power = np.mean(tr_data_filt[:n*len(t)].reshape(-1, n), axis=1)
+
+
+# Now, check lengths again to ensure consistency
+print(f'Length of Adjusted Velocities: {len(velocities_for_avg_power)}')
+
+# Check lengths again to ensure consistency
+print(f'Length of Adjusted Relative Time (t_avg_power): {len(t)}')
+print(f'Length of Interpolated Velocities: {len(velocities_for_avg_power)}')
+
+# Now, create the DataFrame to store the results
+results_df = pd.DataFrame({
+    'Relative Time (s)': t,  # Use the adjusted time array
+    'Velocity (m/s)': velocities_for_avg_power,
+    'Average Power ((m/s)^2/Hz)': avg_power,
+    'Weighted Frequency (Hz)': weighted_freq,
+    'Dominant Frequency (Hz)': dominant_freq[:len(avg_power)],  # Adjust to match avg_power length
+})
+
+# Print the results DataFrame
+print(results_df)
+
+
 # Plotting
 fig, axs = plt.subplots(4, 1, figsize=(12, 18))
 
@@ -108,6 +141,7 @@ axs[0].set_ylabel('Velocity (m/s)')
 axs[0].set_xlabel('Time (s)')
 axs[0].legend()
 axs[0].set_title('Filtered Seismic Trace')
+
 
 # Spectrogram
 vals = axs[1].pcolormesh(t, f, sxx, cmap=cm.jet, vmax=5e-17)
@@ -133,5 +167,6 @@ axs[3].set_ylabel('Dominant Frequency (Hz)', color='g')
 axs[3].set_xlabel('Relative Time (s)')
 axs[3].set_title('Dominant Frequency Over Time')
 axs[3].legend()
+
 fig.tight_layout()
 plt.show()
