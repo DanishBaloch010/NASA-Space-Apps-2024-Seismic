@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import os
 from scipy.signal import butter, filtfilt, welch, spectrogram
+from scipy import signal
+from matplotlib import cm
 
 cat_directory = 'C:/Users/bruno/OneDrive/Desktop/NASA Space Apps 2024 Seismic/space_apps_2024_seismic_detection/space_apps_2024_seismic_detection/data/lunar/training/catalogs/'
 cat_file = cat_directory + 'apollo12_catalog_GradeA_final.csv'
@@ -50,7 +52,7 @@ arrival_time = relative_seconds  # Ensure this variable is defined in your conte
 
 
 
- # Set the minimum frequency
+# Set the minimum frequency
 minfreq = 0.5
 maxfreq = 1.0
 # Going to create a separate trace for the filter data
