@@ -1,24 +1,33 @@
 import tensorflow as tf
 import numpy as np
-import keras
+import pandas as pd
+from keras.models import load_model
 
 # Step 1: Load the model
-model = keras.models.load_model('seismic_event_detection_model.keras')
+model = load_model('seismic_model.keras')
 
-# Step 2: Prepare your input data
-# Assuming your input data has the same shape as the training data
-# For example, let's create some dummy data for prediction
-# Replace this with your actual data preprocessing
-new_data = np.random.rand(1, 2555, 8)  # Shape should match (batch_size, timesteps, features)
+# Step 2: Load the CSV file
+csv_file_path = 'TestingDataCSVs/xa.s12.00.mhz.1970-01-19HR00_evid00002_seismic_results.csv'  # Replace with your actual file path
+data = pd.read_csv(csv_file_path)
 
-# Step 3: Make predictions
-predictions = model.predict(new_data)
+# Step 3: Preprocess the data
+# Extracting features, omitting 'Relative Time (s)' as it's typically not a feature for prediction
+features = data[['Velocity (m/s)', 'Average Power ((m/s)^2/Hz)', 
+                 'Weighted Frequency (Hz)', 'Dominant Frequency (Hz)', 
+                 'Velocity Upper Band', 'Velocity Lower Band', 
+                 'Moving Average']].values  # Adjust this list based on actual features needed
 
-# Step 4: Process predictions
-# Since you're predicting the start of seismic events, the output will typically be probabilities
-# You can convert these probabilities into binary predictions based on a threshold (e.g., 0.5)
+# Reshape the data: model input should be (batch_size, timesteps, features)
+# Here, we assume you want to use all rows as a single sequence for prediction
+# Adjust 'timesteps' accordingly if your model was trained with a specific window size
+features = features.reshape((1, features.shape[0], features.shape[1]))  
+
+# Step 4: Make predictions
+predictions = model.predict(features)
+
+# Step 5: Process predictions
 predicted_classes = (predictions > 0.5).astype(int)
 
-# Step 5: Print results
+# Step 6: Print results
 print("Predictions:", predictions)
 print("Predicted classes:", predicted_classes)
