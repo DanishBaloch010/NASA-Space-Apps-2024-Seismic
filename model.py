@@ -17,9 +17,8 @@ def load_data(directory):
             
             # Specify feature columns by name
             feature_columns = [
-                'Relative Time (s)', 
                 'Velocity (m/s)', 
-                'Average Power ((m/s)²/Hz)', 
+                'Average Power ((m/s)^2/Hz)', 
                 'Weighted Frequency (Hz)', 
                 'Dominant Frequency (Hz)', 
                 'Velocity Upper Band', 
@@ -31,14 +30,21 @@ def load_data(directory):
 
             # Extract the label for the start of the seismic event
             if 1 in data['is_seismic'].values:
-                label_data = 1  # The event starts
+                # Get the relative time of the first occurrence of the seismic event
+                label_data = data['Relative Time (s)'][data['is_seismic'] == 1].values[0]
             else:
-                label_data = 0  # No event
-            labels.append(label_data)  # Append single label (0 or 1)
+                label_data = np.nan  # No event detected
 
-    # Pad sequences to the same length
+            labels.append(label_data)  # Append label (relative time or NaN)
+
+    # Convert features and labels to numpy arrays
     features = pad_sequences(features, padding='post', dtype='float32')  # Pad feature arrays
     labels = np.array(labels, dtype='float32')  # Convert labels to numpy array
+
+    # Remove entries with NaN labels
+    valid_indices = ~np.isnan(labels)
+    features = features[valid_indices]
+    labels = labels[valid_indices]
 
     print(f'Feature array shape: {features.shape}')  # e.g. (76, 2555, 7)
     print(f'Label array shape: {labels.shape}')      # e.g. (76,)
@@ -49,9 +55,9 @@ def load_data(directory):
 def create_model(input_shape):
     model = keras.Sequential([
         layers.LSTM(64, return_sequences=False, input_shape=input_shape),  # Output a single value
-        layers.Dense(1, activation='sigmoid')  # Outputs a single value (0 or 1)
+        layers.Dense(1, activation='relu')  # Outputs a single continuous value for regression
     ])
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])  # Use MSE for regression
     return model
 
 # Main execution
@@ -72,7 +78,7 @@ if __name__ == "__main__":
     early_stopping = EarlyStopping(monitor='loss', patience=2, restore_best_weights=True)
 
     # Train the model with early stopping
-    history = model.fit(features, labels, epochs=50, batch_size=32, callbacks=[early_stopping])
+    history = model.fit(features, labels, epochs=1000, batch_size=128, callbacks=[early_stopping])
 
     # Save the model
     model.save('seismic_model.keras')

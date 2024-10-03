@@ -11,7 +11,7 @@ data = pd.read_csv(csv_file_path)
 
 # Step 3: Preprocess the data
 # Selecting the features used for prediction (7 features excluding 'is_seismic')
-features = data[['Velocity (m/s)', 'Average Power ((m/s)^2/Hz)', 
+features = data[['Relative Time (s)','Velocity (m/s)', 'Average Power ((m/s)^2/Hz)', 
                  'Weighted Frequency (Hz)', 'Dominant Frequency (Hz)', 
                  'Velocity Upper Band', 'Velocity Lower Band', 
                  'Moving Average']].values
