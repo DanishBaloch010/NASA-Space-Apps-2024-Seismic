@@ -12,7 +12,8 @@ from matplotlib import cm
 
 for index in range(76):
 
-    cat_directory = 'C:/Users/bruno/OneDrive/Desktop/NASA Space Apps 2024 Seismic/space_apps_2024_seismic_detection/space_apps_2024_seismic_detection/data/lunar/training/catalogs/'
+    #cat_directory = 'C:/Users/bruno/OneDrive/Desktop/NASA Space Apps 2024 Seismic/space_apps_2024_seismic_detection/space_apps_2024_seismic_detection/data/lunar/training/catalogs/'
+    cat_directory = "C:/Users/AyreB12/OneDrive - Berkhamsted Schools Group/Desktop/space_apps_2024_seismic_detection/data/lunar//training/catalogs/"
     cat_file = cat_directory + 'apollo12_catalog_GradeA_final.csv'
     data_cat = pd.read_csv(cat_file)
     # print(data_cat)
@@ -26,7 +27,8 @@ for index in range(76):
     # print(test_filename)
 
 
-    data_directory = 'C:/Users/bruno/OneDrive/Desktop/NASA Space Apps 2024 Seismic/space_apps_2024_seismic_detection/space_apps_2024_seismic_detection/data/lunar/training/data/S12_GradeA'
+    #data_directory = 'C:/Users/bruno/OneDrive/Desktop/NASA Space Apps 2024 Seismic/space_apps_2024_seismic_detection/space_apps_2024_seismic_detection/data/lunar/training/data/S12_GradeA'
+    data_directory = "C:/Users/AyreB12/OneDrive - Berkhamsted Schools Group/Desktop/space_apps_2024_seismic_detection/data/lunar/training/data/S12_GradeA"
     csv_file = f'{data_directory}/{test_filename}.csv'
     mseed_file = f'{data_directory}/{test_filename}.mseed'
     st = read(mseed_file)
@@ -222,13 +224,13 @@ for index in range(76):
     # Now, create the DataFrame to store the results
     results_df = pd.DataFrame({
         'Relative Time (s)': t,  # Use the adjusted time array
-        'Velocity (m/s)': normalize_minus_one_to_one(velocities_for_avg_power),
-        'Average Power ((m/s)^2/Hz)': normalize_zero_to_one(avg_power),
-        'Weighted Frequency (Hz)': normalize_zero_to_one(weighted_freq),
-        'Dominant Frequency (Hz)': normalize_zero_to_one(dominant_freq[:len(avg_power)]),  # Adjust to match avg_power length
-        'Velocity Upper Band': normalize_zero_to_one(upper_band),
-        'Velocity Lower Band': normalize_minus_one_to_zero(lower_band),
-        'Moving Average': normalize_minus_one_to_one(moving_average)
+        'Velocity (m/s)': velocities_for_avg_power,
+        'Average Power ((m/s)^2/Hz)': avg_power,
+        'Weighted Frequency (Hz)': weighted_freq,
+        'Dominant Frequency (Hz)': dominant_freq[:len(avg_power)],  # Adjust to match avg_power length
+        'Velocity Upper Band': upper_band,
+        'Velocity Lower Band': lower_band,
+        'Moving Average': moving_average
     })
 
 

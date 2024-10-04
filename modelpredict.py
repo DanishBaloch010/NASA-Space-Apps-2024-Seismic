@@ -1,35 +1,28 @@
 import numpy as np
 import pandas as pd
 from keras.models import load_model
+from sklearn.preprocessing import StandardScaler
 
 # Step 1: Load the model
-model = load_model('seismic_model.keras')
+model = load_model('seismic_event_model.keras')
 
 # Step 2: Load the testing CSV file
-csv_file_path = 'TestingDataCSVs/xa.s12.00.mhz.1970-01-19HR00_evid00002_seismic_results.csv'  # Replace with your actual file path
-data = pd.read_csv(csv_file_path)
+test_file_path = 'TestingDataCSVs/xa.s15.00.mhz.1973-08-10HR00_evid00126_seismic_results.csv'  # Replace with your actual file path
+test_data = pd.read_csv(test_file_path)
 
-# Step 3: Preprocess the data
-# Selecting the features used for prediction (7 features excluding 'is_seismic')
-features = data[['Relative Time (s)','Velocity (m/s)', 'Average Power ((m/s)^2/Hz)', 
-                 'Weighted Frequency (Hz)', 'Dominant Frequency (Hz)', 
-                 'Velocity Upper Band', 'Velocity Lower Band', 
-                 'Moving Average']].values
+# Print the structure of the testing data
+print(f"Testing Data Columns: {list(test_data.columns)}")
+print(f"Shape of the test data: {test_data.shape}")
 
-# Step 4: Reshape the data
-# Here, we assume that each sample has 2555 timesteps, and we are predicting on a single batch.
-# Since we don't know the number of timesteps in your testing data, you may need to adjust accordingly.
-# For example, if you are processing all the features at once and the shape should be (1, 2555, 7):
-# Check the shape of features
-timesteps = features.shape[0]  # Number of rows in the testing data
-features = features.reshape((1, timesteps, features.shape[1]))  # Adjust if needed
+# Drop the 'Relative Time (s)' column, as it should not be included in features
+X_test = test_data.drop(columns=['Relative Time (s)'])
 
-# Step 5: Make predictions
-predictions = model.predict(features)
+# Scale the test data using the same scaler used for training data
+scaler = StandardScaler()
+X_test_scaled = scaler.fit_transform(X_test)
 
-# Step 6: Process predictions
-predicted_classes = (predictions > 0.5).astype(int)
+# Make predictions
+predicted_time = model.predict(X_test_scaled)
 
-# Step 7: Print results
-print("Predictions:", predictions)
-print("Predicted classes:", predicted_classes)
+# Print the predicted relative time for the seismic event
+print(f"Predicted relative time for the seismic event start: {predicted_time}")

@@ -1,84 +1,71 @@
-import os
-import numpy as np
 import pandas as pd
+import numpy as np
+import os
 import tensorflow as tf
-from tensorflow import keras
-from keras import layers
-from keras.preprocessing.sequence import pad_sequences
-from keras.callbacks import EarlyStopping
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import class_weight
 
-def load_data(directory):
-    features, labels = [], []
-
+# Load Training Data
+def load_data_from_directory(directory):
+    dataframes = []
     for filename in os.listdir(directory):
         if filename.endswith('.csv'):
             file_path = os.path.join(directory, filename)
-            data = pd.read_csv(file_path)
-            
-            # Specify feature columns by name
-            feature_columns = [
-                'Velocity (m/s)', 
-                'Average Power ((m/s)^2/Hz)', 
-                'Weighted Frequency (Hz)', 
-                'Dominant Frequency (Hz)', 
-                'Velocity Upper Band', 
-                'Velocity Lower Band', 
-                'Moving Average'
-            ]
-            feature_data = data[feature_columns].values  # Extract features by column names
-            features.append(feature_data)
+            df = pd.read_csv(file_path)
+            dataframes.append(df)
+    return pd.concat(dataframes, ignore_index=True)
 
-            # Extract the label for the start of the seismic event
-            if 1 in data['is_seismic'].values:
-                # Get the relative time of the first occurrence of the seismic event
-                label_data = data['Relative Time (s)'][data['is_seismic'] == 1].values[0]
-            else:
-                label_data = np.nan  # No event detected
+# Load and prepare the data
+train_data = load_data_from_directory('DataCSV')
 
-            labels.append(label_data)  # Append label (relative time or NaN)
+# Ensure we are checking the shape of the data
+print(f"Shape of training data: {train_data.shape}")
 
-    # Convert features and labels to numpy arrays
-    features = pad_sequences(features, padding='post', dtype='float32')  # Pad feature arrays
-    labels = np.array(labels, dtype='float32')  # Convert labels to numpy array
+# Separate features and target
+X = train_data.drop(columns=['Relative Time (s)', 'is_seismic'])
+y = train_data['Relative Time (s)'][train_data['is_seismic'] == 1]
 
-    # Remove entries with NaN labels
-    valid_indices = ~np.isnan(labels)
-    features = features[valid_indices]
-    labels = labels[valid_indices]
+# Check the number of samples
+print(f"Number of samples in X: {X.shape[0]}")
+print(f"Number of samples in y: {y.shape[0]}")
 
-    print(f'Feature array shape: {features.shape}')  # e.g. (76, 2555, 7)
-    print(f'Label array shape: {labels.shape}')      # e.g. (76,)
+# If y is empty, we need to handle that case
+if y.empty:
+    raise ValueError("No seismic event found in the training data. Ensure there are entries with is_seismic = 1.")
 
-    return features, labels
+# Scale the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Ensure that y is a 1D array and the same length as X
+y = y.values  # Convert y to numpy array
+
+# Create class weights to handle imbalance
+class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(y), y=y)
 
 # Define the model
-def create_model(input_shape):
-    model = keras.Sequential([
-        layers.LSTM(64, return_sequences=False, input_shape=input_shape),  # Output a single value
-        layers.Dense(1, activation='relu')  # Outputs a single continuous value for regression
-    ])
-    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])  # Use MSE for regression
-    return model
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(X.shape[1],)),
+    tf.keras.layers.Dense(128, activation='relu'),  # Increased layer size
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(1)  # Output layer for regression (relative time)
+])
 
-# Main execution
-if __name__ == "__main__":
-    directory = "DataCSV"  # Update this to your directory
-    features, labels = load_data(directory)
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error')
 
-    # Reshape features to match the LSTM input shape
-    features = features.reshape((features.shape[0], features.shape[1], features.shape[2]))
+# Add Early Stopping
+early_stopping = tf.keras.callbacks.EarlyStopping(
+    monitor='loss',  # Monitor the training loss
+    patience=5,      # Number of epochs to wait before stopping if no improvement
+    restore_best_weights=True  # Restore the best weights after stopping
+)
 
-    print(f'Reshaped feature array shape: {features.shape}')  # e.g. (76, 2555, 7)
-    print(f'Label array shape: {labels.shape}')              # e.g. (76,)
+# Train the model with Early Stopping
+model.fit(X_scaled, y, epochs=200, batch_size=128, callbacks=[early_stopping], class_weight=class_weights)
 
-    # Create the model
-    model = create_model((features.shape[1], features.shape[2]))
+# Save the trained model
+model.save('seismic_event_model.keras')
 
-    # Set up early stopping
-    early_stopping = EarlyStopping(monitor='loss', patience=2, restore_best_weights=True)
-
-    # Train the model with early stopping
-    history = model.fit(features, labels, epochs=1000, batch_size=128, callbacks=[early_stopping])
-
-    # Save the model
-    model.save('seismic_model.keras')
+print("Model saved as 'seismic_event_model.keras'")

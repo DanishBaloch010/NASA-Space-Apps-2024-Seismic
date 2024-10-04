@@ -5,7 +5,8 @@ from scipy import signal
 from matplotlib import cm
 
 # Directories
-data_directory = 'C:/Users/bruno/OneDrive/Desktop/NASA Space Apps 2024 Seismic/space_apps_2024_seismic_detection/space_apps_2024_seismic_detection/data/lunar/training/data/S12_GradeA'
+#data_directory = 'C:/Users/bruno/OneDrive/Desktop/NASA Space Apps 2024 Seismic/space_apps_2024_seismic_detection/space_apps_2024_seismic_detection/data/lunar/test/data/S15_GradeA'
+data_directory = "C:/Users/AyreB12/OneDrive - Berkhamsted Schools Group/Desktop/space_apps_2024_seismic_detection/data/lunar/test/data/S15_GradeA/"
 output_directory = 'TestingDataCSVs/'
 
 # Create output directory if it doesn't exist
