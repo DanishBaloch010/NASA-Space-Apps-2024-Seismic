@@ -2,7 +2,8 @@ this folder contains a single and code to detect anomaly(earthquake) on that sig
 
 the process is totally automatic.
 
-run this code on 'xa.s12.00.mhz.1970-06-15HR00_evid00008.csv'
+run this code on 'xa.s12.00.mhz.1970-06-15HR00_evid00008.csv' 
+(i could not upload it because the file size was too huge)
 
 the path is mentioned in the code, change it as you want.
 
